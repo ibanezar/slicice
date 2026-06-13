@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="hr">
+<html lang="sl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FIFA 2026 – Zamjena Sličica</title>
+  <title>FIFA 2026 – Zamenjava Sličic</title>
   <style>
     :root {
       --navy:   #0a2463;
@@ -358,25 +358,25 @@
 <header>
   <div class="hdr">
     <span class="hdr-icon">⚽</span>
-    <h1>FIFA <span class="gold">2026</span> &ndash; Zamjena Sličica</h1>
-    <p>Panini album &middot; Što trebam &middot; Što nudim za zamjenu</p>
+    <h1>FIFA <span class="gold">2026</span> &ndash; Zamenjava Sličic</h1>
+    <p>Panini album &middot; Kar potrebujem &middot; Kar ponujam za zamenjavo</p>
   </div>
   <div class="stats-bar">
     <div class="stat">
       <span class="stat-n" id="s-teams">0</span>
-      <span class="stat-l">Reprezentacija</span>
+      <span class="stat-l">Reprezentanc</span>
     </div>
     <div class="stat">
       <span class="stat-n" id="s-needed">0</span>
-      <span class="stat-l">Trebam ukupno</span>
+      <span class="stat-l">Potrebujem skupaj</span>
     </div>
     <div class="stat">
       <span class="stat-n" id="s-dupes">0</span>
-      <span class="stat-l">Duplikata ukupno</span>
+      <span class="stat-l">Dvojnikov skupaj</span>
     </div>
     <div class="stat">
       <span class="stat-n" id="s-uniq">0</span>
-      <span class="stat-l">Jedinstvenih za zamjenu</span>
+      <span class="stat-l">Edinstvenih za zamenjavo</span>
     </div>
   </div>
 </header>
@@ -385,13 +385,13 @@
   <div class="ctrl">
     <div class="srch-wrap">
       <span class="ico">🔍</span>
-      <input type="text" id="search" placeholder="Pretraži reprezentaciju ili broj sličice…" autocomplete="off">
+      <input type="text" id="search" placeholder="Išči reprezentanco ali številko sličice…" autocomplete="off">
     </div>
     <div class="filters">
-      <button class="fbtn on" data-f="all">Sve</button>
-      <button class="fbtn" data-f="need">Trebam</button>
-      <button class="fbtn" data-f="have">Duplikati</button>
-      <button class="fbtn" data-f="both">Trebam + Imam</button>
+      <button class="fbtn on" data-f="all">Vse</button>
+      <button class="fbtn" data-f="need">Potrebujem</button>
+      <button class="fbtn" data-f="have">Dvojniki</button>
+      <button class="fbtn" data-f="both">Potrebujem + Imam</button>
     </div>
     <span id="count"></span>
   </div>
@@ -400,17 +400,17 @@
 <main>
   <div class="summary" id="summary">
     <div class="summary-hdr" id="sum-toggle">
-      <h3>📋 Moja ponuda za zamjenu (sve reprezentacije)</h3>
+      <h3>📋 Moja ponudba za zamenjavo (vse reprezentance)</h3>
       <span class="toggle-ico">▼</span>
     </div>
     <div class="summary-body">
       <div class="sum-cols">
         <div class="sum-col need">
-          <h4>🔴 Trebam ove sličice</h4>
+          <h4>🔴 Potrebujem te sličice</h4>
           <div class="sum-stickers" id="all-need"></div>
         </div>
         <div class="sum-col have">
-          <h4>🟢 Nudim za zamjenu</h4>
+          <h4>🟢 Ponujam za zamenjavo</h4>
           <div class="sum-stickers" id="all-have"></div>
         </div>
       </div>
@@ -420,11 +420,11 @@
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty">
     <div class="empty-ico">🔍</div>
-    <p>Nema rezultata za "<strong id="eq"></strong>"</p>
+    <p>Ni rezultatov za "<strong id="eq"></strong>"</p>
   </div>
 </main>
 
-<footer>FIFA 2026 · Panini · Zamjena Sličica</footer>
+<footer>FIFA 2026 · Panini · Zamenjava Sličic</footer>
 
 <script>
 const TEAMS = [
@@ -533,14 +533,14 @@ const grid = document.getElementById('grid');
 data.forEach(t => {
   const needHtml = t.needed.length
     ? t.needed.map(n => `<span class="s need" data-n="${n}">${n}</span>`).join('')
-    : '<span class="none-txt">Sve sličice su skupljene ✓</span>';
+    : '<span class="none-txt">Vse sličice so zbrane ✓</span>';
 
   const haveHtml = t.dupes.length
     ? t.dupes.map(n => {
         const c = t.dupCnt[n];
         return `<span class="s have${c > 1 ? ' multi' : ''}" data-n="${n}">${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`;
       }).join('')
-    : '<span class="none-txt">Nema duplikata</span>';
+    : '<span class="none-txt">Ni dvojnikov</span>';
 
   grid.insertAdjacentHTML('beforeend', `
     <div class="card" id="c-${t.id}">
@@ -553,10 +553,10 @@ data.forEach(t => {
         </div>
       </div>
       <div class="card-body">
-        <div class="slabel need">🔴 Nedostaje (${t.needed.length})</div>
+        <div class="slabel need">🔴 Manjka (${t.needed.length})</div>
         <div class="stickers">${needHtml}</div>
         <div class="div"></div>
-        <div class="slabel have">🟢 Duplikati (${t.totalDupes})</div>
+        <div class="slabel have">🟢 Dvojniki (${t.totalDupes})</div>
         <div class="stickers">${haveHtml}</div>
       </div>
     </div>`);
@@ -596,7 +596,7 @@ function applyFilter(filt, q) {
     });
   });
 
-  document.getElementById('count').textContent = `${vis} od ${data.length}`;
+  document.getElementById('count').textContent = `${vis} od ${data.length} reprezentanc`;
   const empty = document.getElementById('empty');
   empty.classList.toggle('show', vis === 0);
   if (vis === 0) document.getElementById('eq').textContent = q;
