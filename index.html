@@ -280,6 +280,33 @@
     .s.hl { outline: 2px solid var(--gold); outline-offset: 1px; }
     .s small { font-size: .65rem; margin-left: .15rem; opacity: .8; }
 
+    /* ── CHECKED STATE ──────────────────────── */
+    .s { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .s.done {
+      opacity: .38;
+      text-decoration: line-through;
+    }
+    .s.need.done { background: #f7fafc; color: #a0aec0; border-color: #e2e8f0; }
+    .s.have.done { background: #f7fafc; color: #a0aec0; border-color: #e2e8f0; }
+    .s.done::after { content: ' ✓'; font-style: normal; text-decoration: none; display: inline-block; }
+
+    /* Reset button */
+    #btn-reset {
+      padding: .45rem .85rem;
+      border: 2px solid #fc8181;
+      border-radius: 7px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #c53030;
+      transition: all .15s;
+      white-space: nowrap;
+      display: none;
+      min-height: 38px;
+    }
+    #btn-reset:hover { background: #fff5f5; }
+
     .div { height: 1px; background: var(--border); margin: .75rem 0; }
     .none-txt { font-size: .76rem; color: var(--muted); font-style: italic; }
 
@@ -394,6 +421,7 @@
       <button class="fbtn" data-f="both">Potrebujem + Imam</button>
     </div>
     <span id="count"></span>
+    <button id="btn-reset" title="Počisti vse označene">✕ Počisti</button>
   </div>
 </div>
 
@@ -514,12 +542,12 @@ const haveEl = document.getElementById('all-have');
 data.forEach(t => {
   t.needed.forEach(n => {
     needEl.insertAdjacentHTML('beforeend',
-      `<span class="s need">${t.id}-${n}</span>`);
+      `<span class="s need" data-key="need:${t.id}:${n}">${t.id}-${n}</span>`);
   });
   t.dupes.forEach(n => {
     const c = t.dupCnt[n];
     haveEl.insertAdjacentHTML('beforeend',
-      `<span class="s have${c > 1 ? ' multi' : ''}">${t.id}-${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`);
+      `<span class="s have${c > 1 ? ' multi' : ''}" data-key="have:${t.id}:${n}">${t.id}-${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`);
   });
 });
 
@@ -532,13 +560,13 @@ const grid = document.getElementById('grid');
 
 data.forEach(t => {
   const needHtml = t.needed.length
-    ? t.needed.map(n => `<span class="s need" data-n="${n}">${n}</span>`).join('')
+    ? t.needed.map(n => `<span class="s need" data-n="${n}" data-key="need:${t.id}:${n}">${n}</span>`).join('')
     : '<span class="none-txt">Vse sličice so zbrane ✓</span>';
 
   const haveHtml = t.dupes.length
     ? t.dupes.map(n => {
         const c = t.dupCnt[n];
-        return `<span class="s have${c > 1 ? ' multi' : ''}" data-n="${n}">${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`;
+        return `<span class="s have${c > 1 ? ' multi' : ''}" data-n="${n}" data-key="have:${t.id}:${n}">${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`;
       }).join('')
     : '<span class="none-txt">Ni dvojnikov</span>';
 
@@ -616,6 +644,60 @@ document.getElementById('search').addEventListener('input', e => {
 });
 
 applyFilter('all', '');
+
+// ── Check / tick stickers ──────────────────────────────────────────────────
+const STORE = 'slicice_v1';
+let checked = new Set(JSON.parse(localStorage.getItem(STORE) || '[]'));
+
+function saveChecked() {
+  localStorage.setItem(STORE, JSON.stringify([...checked]));
+  document.getElementById('btn-reset').style.display = checked.size ? '' : 'none';
+}
+
+function refreshBadge(teamId) {
+  const t = data.find(d => d.id === teamId);
+  if (!t) return;
+  const card = document.getElementById('c-' + t.id);
+  const nb = card.querySelector('.badge.need');
+  const hb = card.querySelector('.badge.have');
+  const rem  = t.needed.filter(n => !checked.has(`need:${t.id}:${n}`)).length;
+  const remD = t.dupes.reduce((s, n) => checked.has(`have:${t.id}:${n}`) ? s : s + t.dupCnt[n], 0);
+  if (nb) nb.textContent = `-${rem}`;
+  if (hb) hb.textContent = `+${remD}`;
+}
+
+// Restore on load
+document.querySelectorAll('.s[data-key]').forEach(el => {
+  if (checked.has(el.dataset.key)) el.classList.add('done');
+});
+data.forEach(t => refreshBadge(t.id));
+document.getElementById('btn-reset').style.display = checked.size ? '' : 'none';
+
+// Click to toggle
+document.addEventListener('click', e => {
+  const el = e.target.closest('.s[data-key]');
+  if (!el) return;
+  const key = el.dataset.key;
+  if (checked.has(key)) {
+    checked.delete(key);
+    // un-check all elements sharing this key (card + summary)
+    document.querySelectorAll(`.s[data-key="${CSS.escape(key)}"]`).forEach(x => x.classList.remove('done'));
+  } else {
+    checked.add(key);
+    document.querySelectorAll(`.s[data-key="${CSS.escape(key)}"]`).forEach(x => x.classList.add('done'));
+  }
+  const teamId = key.split(':')[1];
+  refreshBadge(teamId);
+  saveChecked();
+});
+
+// Reset button
+document.getElementById('btn-reset').addEventListener('click', () => {
+  checked.clear();
+  document.querySelectorAll('.s.done').forEach(el => el.classList.remove('done'));
+  data.forEach(t => refreshBadge(t.id));
+  saveChecked();
+});
 </script>
 </body>
 </html>
