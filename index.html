@@ -303,6 +303,48 @@
       border-top: 1px solid var(--border);
     }
 
+    /* ── MOBILE ─────────────────────────────── */
+
+    /* iOS auto-zoom fix: any input < 16px triggers zoom on focus */
+    #search { font-size: 16px; }
+
+    /* Larger touch targets */
+    .fbtn { min-height: 38px; padding: .5rem .9rem; }
+
+    @media (max-width: 500px) {
+      /* Tighter header */
+      header { padding: 1.25rem 1rem 0; }
+      .hdr-icon { font-size: 2rem; }
+
+      /* Stats: 2×2 grid instead of a single cramped row */
+      .stats-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem 1rem;
+        padding: .9rem 1rem;
+      }
+
+      /* Keep sticky bar to one row: filters scroll horizontally */
+      .ctrl-wrap { padding: .6rem .875rem; }
+      .ctrl { flex-wrap: nowrap; align-items: stretch; gap: .5rem; }
+      .srch-wrap { min-width: 0; }
+      .filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 1px;
+      }
+      .filters::-webkit-scrollbar { display: none; }
+      #count { display: none; }
+
+      /* Reduce side padding in content */
+      main { padding: .875rem .875rem 3rem; }
+
+      /* Summary panel header smaller text */
+      .summary-hdr h3 { font-size: .76rem; letter-spacing: .5px; }
+    }
+
     /* ── PRINT ──────────────────────────────── */
     @media print {
       .ctrl-wrap, footer, .summary { display: none; }
