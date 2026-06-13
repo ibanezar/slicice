@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIFA 2026 – Zamjena Sličica</title>
+  <style>
+    :root {
+      --navy:   #0a2463;
+      --dark:   #061640;
+      --gold:   #ffd700;
+      --red:    #e53e3e;
+      --green:  #2f855a;
+      --bg:     #eef1f8;
+      --white:  #ffffff;
+      --border: #e2e8f0;
+      --muted:  #718096;
+      --radius: 12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ─────────────────────────────── */
+    header {
+      background: linear-gradient(150deg, var(--dark) 0%, var(--navy) 55%, #1a3a9f 100%);
+      color: #fff;
+      padding: 2rem 1.5rem 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,215,0,.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hdr { position: relative; z-index: 1; }
+    .hdr-icon { font-size: 2.8rem; display: block; margin-bottom: .4rem; }
+    .hdr h1 {
+      font-size: clamp(1.4rem, 4vw, 2.3rem);
+      font-weight: 800;
+      letter-spacing: -.5px;
+    }
+    .hdr h1 .gold { color: var(--gold); }
+    .hdr p { opacity: .6; margin-top: .3rem; font-size: .88rem; }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: clamp(1rem, 4vw, 3rem);
+      padding: 1.25rem 1.5rem;
+      margin-top: 1.5rem;
+      background: rgba(0,0,0,.22);
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; color: #fff; }
+    .stat-n { display: block; font-size: 1.7rem; font-weight: 800; color: var(--gold); line-height: 1; }
+    .stat-l { display: block; font-size: .62rem; text-transform: uppercase; letter-spacing: 1.4px; opacity: .55; margin-top: .2rem; }
+
+    /* ── STICKY CONTROLS ────────────────────── */
+    .ctrl-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      padding: .8rem 1.5rem;
+    }
+    .ctrl {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      gap: .625rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .srch-wrap {
+      flex: 1;
+      min-width: 180px;
+      position: relative;
+    }
+    .srch-wrap .ico {
+      position: absolute;
+      left: .7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: .35;
+      pointer-events: none;
+      font-size: .95rem;
+    }
+    #search {
+      width: 100%;
+      padding: .6rem .75rem .6rem 2.1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: .92rem;
+      outline: none;
+      transition: border-color .18s;
+    }
+    #search:focus { border-color: var(--navy); }
+    .filters { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .fbtn {
+      padding: .45rem .85rem;
+      border: 2px solid var(--border);
+      border-radius: 7px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .fbtn:hover { border-color: var(--navy); color: var(--navy); }
+    .fbtn.on { background: var(--navy); color: var(--white); border-color: var(--navy); }
+    #count { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+
+    /* ── MAIN ───────────────────────────────── */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 4rem;
+    }
+
+    /* ── SWAP SUMMARY ───────────────────────── */
+    .summary {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 5px rgba(0,0,0,.06);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .summary-hdr {
+      padding: .875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .summary-hdr h3 {
+      font-size: .85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--navy);
+    }
+    .toggle-ico { font-size: .8rem; color: var(--muted); transition: transform .2s; }
+    .summary.open .toggle-ico { transform: rotate(180deg); }
+    .summary-body {
+      display: none;
+      padding: 0 1.25rem 1.25rem;
+    }
+    .summary.open .summary-body { display: block; }
+    .sum-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 560px) { .sum-cols { grid-template-columns: 1fr; } }
+    .sum-col h4 {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: .5rem;
+    }
+    .sum-col.need h4 { color: var(--red); }
+    .sum-col.have h4 { color: var(--green); }
+    .sum-stickers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .25rem;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: .25rem;
+    }
+    .sum-stickers::-webkit-scrollbar { width: 4px; }
+    .sum-stickers::-webkit-scrollbar-track { background: transparent; }
+    .sum-stickers::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── GRID ───────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+      gap: 1rem;
+    }
+
+    /* ── CARD ───────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      overflow: hidden;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover {
+      box-shadow: 0 5px 20px rgba(0,0,0,.11);
+      transform: translateY(-2px);
+    }
+    .card.hidden { display: none; }
+
+    .card-hdr {
+      background: linear-gradient(135deg, var(--navy), #1a3a9f);
+      padding: .8rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .flag { font-size: 1.35rem; line-height: 1; flex-shrink: 0; }
+    .tname { font-weight: 700; font-size: .9rem; color: #fff; flex: 1; }
+    .badges { display: flex; gap: .3rem; }
+    .badge {
+      font-size: .65rem;
+      font-weight: 700;
+      padding: .18rem .4rem;
+      border-radius: 4px;
+    }
+    .badge.need { background: rgba(229,62,62,.85); color: #fff; }
+    .badge.have { background: rgba(47,133,90,.85); color: #fff; }
+
+    .card-body { padding: .875rem 1rem; }
+
+    .slabel {
+      font-size: .62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      margin-bottom: .4rem;
+    }
+    .slabel.need { color: var(--red); }
+    .slabel.have { color: var(--green); }
+
+    .stickers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      min-height: 1.5rem;
+    }
+
+    .s {
+      display: inline-flex;
+      align-items: center;
+      padding: .22rem .48rem;
+      border-radius: 5px;
+      font-size: .76rem;
+      font-weight: 600;
+      cursor: default;
+      transition: outline .1s;
+    }
+    .s.need {
+      background: #fff5f5;
+      color: #c53030;
+      border: 1px solid #fed7d7;
+    }
+    .s.have {
+      background: #f0fff4;
+      color: #276749;
+      border: 1px solid #c6f6d5;
+    }
+    .s.have.multi {
+      background: #c6f6d5;
+      color: #1c4532;
+      border-color: #68d391;
+      font-weight: 700;
+    }
+    .s.hl { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .s small { font-size: .65rem; margin-left: .15rem; opacity: .8; }
+
+    .div { height: 1px; background: var(--border); margin: .75rem 0; }
+    .none-txt { font-size: .76rem; color: var(--muted); font-style: italic; }
+
+    /* ── EMPTY ──────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      display: none;
+    }
+    .empty.show { display: block; }
+    .empty-ico { font-size: 3rem; }
+    .empty p { margin-top: .5rem; font-size: .9rem; }
+
+    /* ── FOOTER ─────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 1.25rem;
+      color: var(--muted);
+      font-size: .78rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── PRINT ──────────────────────────────── */
+    @media print {
+      .ctrl-wrap, footer, .summary { display: none; }
+      .card { break-inside: avoid; }
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <span class="hdr-icon">⚽</span>
+    <h1>FIFA <span class="gold">2026</span> &ndash; Zamjena Sličica</h1>
+    <p>Panini album &middot; Što trebam &middot; Što nudim za zamjenu</p>
+  </div>
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-n" id="s-teams">0</span>
+      <span class="stat-l">Reprezentacija</span>
+    </div>
+    <div class="stat">
+      <span class="stat-n" id="s-needed">0</span>
+      <span class="stat-l">Trebam ukupno</span>
+    </div>
+    <div class="stat">
+      <span class="stat-n" id="s-dupes">0</span>
+      <span class="stat-l">Duplikata ukupno</span>
+    </div>
+    <div class="stat">
+      <span class="stat-n" id="s-uniq">0</span>
+      <span class="stat-l">Jedinstvenih za zamjenu</span>
+    </div>
+  </div>
+</header>
+
+<div class="ctrl-wrap">
+  <div class="ctrl">
+    <div class="srch-wrap">
+      <span class="ico">🔍</span>
+      <input type="text" id="search" placeholder="Pretraži reprezentaciju ili broj sličice…" autocomplete="off">
+    </div>
+    <div class="filters">
+      <button class="fbtn on" data-f="all">Sve</button>
+      <button class="fbtn" data-f="need">Trebam</button>
+      <button class="fbtn" data-f="have">Duplikati</button>
+      <button class="fbtn" data-f="both">Trebam + Imam</button>
+    </div>
+    <span id="count"></span>
+  </div>
+</div>
+
+<main>
+  <div class="summary" id="summary">
+    <div class="summary-hdr" id="sum-toggle">
+      <h3>📋 Moja ponuda za zamjenu (sve reprezentacije)</h3>
+      <span class="toggle-ico">▼</span>
+    </div>
+    <div class="summary-body">
+      <div class="sum-cols">
+        <div class="sum-col need">
+          <h4>🔴 Trebam ove sličice</h4>
+          <div class="sum-stickers" id="all-need"></div>
+        </div>
+        <div class="sum-col have">
+          <h4>🟢 Nudim za zamjenu</h4>
+          <div class="sum-stickers" id="all-have"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">
+    <div class="empty-ico">🔍</div>
+    <p>Nema rezultata za "<strong id="eq"></strong>"</p>
+  </div>
+</main>
+
+<footer>FIFA 2026 · Panini · Zamjena Sličica</footer>
+
+<script>
+const TEAMS = [
+  { id:'FWC',  name:'FWC Special',          flag:'🏆', n:'00,1,2,4,5,6,10,13,17',            d:'4,4,4,7,11,11,15,19' },
+  { id:'MEX',  name:'Mexico',                flag:'🇲🇽', n:'6,18',                              d:'1,1,17,17,19,20' },
+  { id:'RSA',  name:'South Africa',          flag:'🇿🇦', n:'3,7,9,10,19',                      d:'1,5,6,8,8,13,14,18,18,20,20' },
+  { id:'KOR',  name:'Korea Republic',        flag:'🇰🇷', n:'2,8,14,17,18,19',                  d:'3,5,7,9,12,13' },
+  { id:'CZE',  name:'Czech Republic',        flag:'🇨🇿', n:'2,5,8,11',                         d:'10,17' },
+  { id:'CAN',  name:'Canada',                flag:'🇨🇦', n:'2,9,19,20',                        d:'1,4,5,8,10,11,14,14,14,14' },
+  { id:'BIH',  name:'Bosnia & Herzegovina',  flag:'🇧🇦', n:'3,10,14,18,20',                    d:'' },
+  { id:'QAT',  name:'Qatar',                 flag:'🇶🇦', n:'1,2,4,9,11,15,17',                d:'1,1,2,4,12,16,17' },
+  { id:'SUI',  name:'Switzerland',           flag:'🇨🇭', n:'2,4,9,11,12',                      d:'3,3,5,8,10,15' },
+  { id:'BRA',  name:'Brazil',                flag:'🇧🇷', n:'4,6,7,8,12,14,15,18,20',           d:'2,17,17,19' },
+  { id:'MAR',  name:'Morocco',               flag:'🇲🇦', n:'4,7,9,12,14,17,20',               d:'2,6,6,16,16' },
+  { id:'HAI',  name:'Haiti',                 flag:'🇭🇹', n:'3,5,7,8',                          d:'6,10,15' },
+  { id:'SCO',  name:'Scotland',              flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', n:'3,9,15',                           d:'1,1,4,8,10,12,17,18,20' },
+  { id:'USA',  name:'USA',                   flag:'🇺🇸', n:'1,2,3,4,6,7,11,17',               d:'5,18' },
+  { id:'PAR',  name:'Paraguay',              flag:'🇵🇾', n:'2,4,6,11,15,16',                  d:'1,3,7,10,13,13' },
+  { id:'AUS',  name:'Australia',             flag:'🇦🇺', n:'1,8,9,11,14,19',                  d:'12,17,18' },
+  { id:'TUR',  name:'Turkey',                flag:'🇹🇷', n:'7,8,9,11,14,17,20',               d:'1,1,1,1,3,4,10,15' },
+  { id:'GER',  name:'Germany',               flag:'🇩🇪', n:'3,6,9',                            d:'7,7,12,15,16,18,20' },
+  { id:'KUW',  name:'Kuwait',                flag:'🇰🇼', n:'8,16,18',                          d:'1,2,10,11,12,13,15,17,17,20,20' },
+  { id:'CIV',  name:"Côte d'Ivoire",         flag:'🇨🇮', n:'1,6,12',                          d:'11,11,11,13,16' },
+  { id:'ECU',  name:'Ecuador',               flag:'🇪🇨', n:'7,8,9,16,20',                     d:'3,10,10,11,14,18,19' },
+  { id:'NED',  name:'Netherlands',           flag:'🇳🇱', n:'3,6,10,11,12,14,19',              d:'4,4,7,8,8,15' },
+  { id:'JPN',  name:'Japan',                 flag:'🇯🇵', n:'2,5,7,8,9,12,14,20',              d:'4,18,18' },
+  { id:'SWE',  name:'Sweden',                flag:'🇸🇪', n:'3,4,7,12,15,18',                  d:'1,6,14,17,20' },
+  { id:'TUN',  name:'Tunisia',               flag:'🇹🇳', n:'3,4,5,7,16,17',                  d:'1,9,9,10' },
+  { id:'BEL',  name:'Belgium',               flag:'🇧🇪', n:'2,7,8,9,10',                      d:'3,3,13,19' },
+  { id:'EGY',  name:'Egypt',                 flag:'🇪🇬', n:'1,3,5,7,10,11,13,19',             d:'6,8,9,15,18' },
+  { id:'IRN',  name:'Iran',                  flag:'🇮🇷', n:'4,6,9,17,19',                     d:'8,8,12,13,14,15' },
+  { id:'NZL',  name:'New Zealand',           flag:'🇳🇿', n:'1,6,10,15,20',                    d:'8,13,18,19' },
+  { id:'ESP',  name:'Spain',                 flag:'🇪🇸', n:'6,9,12,15,16,17,18',              d:'1,1,5,10' },
+  { id:'CPV',  name:'Cabo Verde',            flag:'🇨🇻', n:'1,5,9,19',                        d:'4,6,6,8,10,10,14,16' },
+  { id:'KSA',  name:'Saudi Arabia',          flag:'🇸🇦', n:'1,2,5,7,8,9,10,12,16,17,18,19,20',d:'4,13,14' },
+  { id:'URU',  name:'Uruguay',               flag:'🇺🇾', n:'1,4,7,19,20',                     d:'2,12' },
+  { id:'FRA',  name:'France',                flag:'🇫🇷', n:'1,3,5,6,7,9,10,15,20',            d:'2,13,19,19' },
+  { id:'SEN',  name:'Senegal',               flag:'🇸🇳', n:'3,4,7,11,14',                    d:'6,6,10,10,15' },
+  { id:'IRQ',  name:'Iraq',                  flag:'🇮🇶', n:'4,10,18',                         d:'5,6,7,8,15' },
+  { id:'NOR',  name:'Norway',                flag:'🇳🇴', n:'5,6,7,10,11,15,16,19',            d:'3,12,17' },
+  { id:'ARG',  name:'Argentina',             flag:'🇦🇷', n:'1,6,8,9,10,12',                  d:'3,7,8,17' },
+  { id:'ALG',  name:'Algeria',               flag:'🇩🇿', n:'3,5,6,10,14,15,16,18',           d:'' },
+  { id:'AUT',  name:'Austria',               flag:'🇦🇹', n:'8,17,18,19',                      d:'1,1,1,9,20' },
+  { id:'JOR',  name:'Jordan',                flag:'🇯🇴', n:'1,3,5,6,7,8,12,17',              d:'14' },
+  { id:'POR',  name:'Portugal',              flag:'🇵🇹', n:'1,5,9,10,12,14,19',              d:'7,11,13,13,17' },
+  { id:'COD',  name:'DR Congo',              flag:'🇨🇩', n:'1,4,5,8,10,11,13',               d:'12,20' },
+  { id:'UZB',  name:'Uzbekistan',            flag:'🇺🇿', n:'1,2,4,9,11,16,19',               d:'3,6,7,10,17' },
+  { id:'COL',  name:'Colombia',              flag:'🇨🇴', n:'1,8,9,11,14,15,18',              d:'6,7,19' },
+  { id:'ENG',  name:'England',               flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', n:'1,2,3,5,14,15',                   d:'8,9,13,16,18,18' },
+  { id:'CRO',  name:'Croatia',               flag:'🇭🇷', n:'5,8,14,16',                       d:'12,15,18,18' },
+  { id:'GHA',  name:'Ghana',                 flag:'🇬🇭', n:'2,5,10,15,16,17,19',             d:'1,3,7,7,8,18' },
+  { id:'PAN',  name:'Panama',                flag:'🇵🇦', n:'2,3,6,8,11,12,16,20',            d:'1,9,10,13,14,15' },
+];
+
+// ── Parse ──────────────────────────────────────────────────────────────────
+function parseList(str) {
+  if (!str || !str.trim()) return [];
+  return str.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function countItems(arr) {
+  return arr.reduce((m, v) => { m[v] = (m[v] || 0) + 1; return m; }, {});
+}
+
+const data = TEAMS.map(t => {
+  const needed  = parseList(t.n).sort((a, b) => +a - +b);
+  const dupArr  = parseList(t.d);
+  const dupCnt  = countItems(dupArr);
+  const dupes   = Object.keys(dupCnt).sort((a, b) => +a - +b);
+  return { ...t, needed, dupes, dupCnt, totalDupes: dupArr.length };
+});
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+const totNeed  = data.reduce((s, d) => s + d.needed.length, 0);
+const totDupes = data.reduce((s, d) => s + d.totalDupes, 0);
+const totUniq  = data.reduce((s, d) => s + d.dupes.length, 0);
+
+document.getElementById('s-teams').textContent  = data.length;
+document.getElementById('s-needed').textContent = totNeed;
+document.getElementById('s-dupes').textContent  = totDupes;
+document.getElementById('s-uniq').textContent   = totUniq;
+
+// ── Swap summary ───────────────────────────────────────────────────────────
+const needEl = document.getElementById('all-need');
+const haveEl = document.getElementById('all-have');
+
+data.forEach(t => {
+  t.needed.forEach(n => {
+    needEl.insertAdjacentHTML('beforeend',
+      `<span class="s need">${t.id}-${n}</span>`);
+  });
+  t.dupes.forEach(n => {
+    const c = t.dupCnt[n];
+    haveEl.insertAdjacentHTML('beforeend',
+      `<span class="s have${c > 1 ? ' multi' : ''}">${t.id}-${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`);
+  });
+});
+
+document.getElementById('sum-toggle').addEventListener('click', () => {
+  document.getElementById('summary').classList.toggle('open');
+});
+
+// ── Build cards ────────────────────────────────────────────────────────────
+const grid = document.getElementById('grid');
+
+data.forEach(t => {
+  const needHtml = t.needed.length
+    ? t.needed.map(n => `<span class="s need" data-n="${n}">${n}</span>`).join('')
+    : '<span class="none-txt">Sve sličice su skupljene ✓</span>';
+
+  const haveHtml = t.dupes.length
+    ? t.dupes.map(n => {
+        const c = t.dupCnt[n];
+        return `<span class="s have${c > 1 ? ' multi' : ''}" data-n="${n}">${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`;
+      }).join('')
+    : '<span class="none-txt">Nema duplikata</span>';
+
+  grid.insertAdjacentHTML('beforeend', `
+    <div class="card" id="c-${t.id}">
+      <div class="card-hdr">
+        <span class="flag">${t.flag}</span>
+        <span class="tname">${t.name}</span>
+        <div class="badges">
+          ${t.needed.length ? `<span class="badge need">-${t.needed.length}</span>` : ''}
+          ${t.dupes.length  ? `<span class="badge have">+${t.totalDupes}</span>` : ''}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="slabel need">🔴 Nedostaje (${t.needed.length})</div>
+        <div class="stickers">${needHtml}</div>
+        <div class="div"></div>
+        <div class="slabel have">🟢 Duplikati (${t.totalDupes})</div>
+        <div class="stickers">${haveHtml}</div>
+      </div>
+    </div>`);
+});
+
+// ── Filter & search ────────────────────────────────────────────────────────
+let curFilter = 'all';
+
+function applyFilter(filt, q) {
+  const query = q.trim().toLowerCase();
+  let vis = 0;
+
+  data.forEach(t => {
+    const card = document.getElementById('c-' + t.id);
+
+    // mode filter
+    let show = true;
+    if (filt === 'need' && !t.needed.length)                     show = false;
+    if (filt === 'have' && !t.dupes.length)                      show = false;
+    if (filt === 'both' && (!t.needed.length || !t.dupes.length)) show = false;
+
+    // text / number search
+    if (query && show) {
+      const matchTeam = t.name.toLowerCase().includes(query) || t.id.toLowerCase().includes(query);
+      const matchNum  = [...t.needed, ...t.dupes].includes(query) ||
+                        [...t.needed, ...t.dupes].includes(query.replace(/^0+/, '') || query);
+      if (!matchTeam && !matchNum) show = false;
+    }
+
+    card.classList.toggle('hidden', !show);
+    if (show) vis++;
+
+    // highlight stickers matching a pure number query
+    card.querySelectorAll('.s[data-n]').forEach(el => {
+      const isNum = /^\d+$/.test(query);
+      el.classList.toggle('hl', isNum && el.dataset.n === query);
+    });
+  });
+
+  document.getElementById('count').textContent = `${vis} od ${data.length}`;
+  const empty = document.getElementById('empty');
+  empty.classList.toggle('show', vis === 0);
+  if (vis === 0) document.getElementById('eq').textContent = q;
+}
+
+document.querySelectorAll('.fbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    curFilter = btn.dataset.f;
+    applyFilter(curFilter, document.getElementById('search').value);
+  });
+});
+
+document.getElementById('search').addEventListener('input', e => {
+  applyFilter(curFilter, e.target.value);
+});
+
+applyFilter('all', '');
+</script>
+</body>
+</html>
