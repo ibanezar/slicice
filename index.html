@@ -280,6 +280,101 @@
     .s.hl { outline: 2px solid var(--gold); outline-offset: 1px; }
     .s small { font-size: .65rem; margin-left: .15rem; opacity: .8; }
 
+    /* ── TABS ───────────────────────────────── */
+    .tab-row {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+    .tabbt {
+      padding: .6rem 1.25rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all .15s;
+      min-height: 38px;
+    }
+    .tabbt.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+    /* ── RESULTS ────────────────────────────── */
+    .grp-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      overflow: hidden;
+      margin-bottom: .875rem;
+    }
+    .grp-hdr {
+      background: linear-gradient(135deg, var(--navy), #1a3a9f);
+      padding: .7rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grp-letter {
+      font-size: 1rem; font-weight: 800;
+      background: rgba(255,255,255,.15);
+      width: 1.9rem; height: 1.9rem;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .grp-teams { font-size: .82rem; flex: 1; opacity: .85; }
+    .grp-tog { font-size: .7rem; opacity: .6; transition: transform .2s; }
+    .grp-card.open .grp-tog { transform: rotate(180deg); }
+    .grp-body { display: none; }
+    .grp-card.open .grp-body { display: block; }
+
+    .match-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: .625rem 1rem;
+      border-top: 1px solid var(--border);
+      gap: .4rem;
+    }
+    .match-row:hover { background: #fafbff; }
+    .match-row.played { }
+    .match-row.today-m { background: #fffbeb; }
+
+    .mt { display: flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600; }
+    .mt.away { justify-content: flex-end; text-align: right; }
+    .mflag { font-size: 1.05rem; flex-shrink: 0; }
+
+    .sc-block { text-align: center; min-width: 5rem; }
+    .sc-val { font-size: 1.1rem; font-weight: 800; color: var(--navy); letter-spacing: 2px; }
+    .sc-date { font-size: .68rem; color: var(--muted); }
+    .sc-today {
+      font-size: .72rem; font-weight: 700;
+      color: #92400e; background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: 4px; padding: .15rem .45rem;
+      display: inline-block;
+    }
+    .yt-btn {
+      display: inline-flex; align-items: center; gap: .2rem;
+      font-size: .7rem; font-weight: 700;
+      color: #c53030; background: #fff5f5;
+      border: 1px solid #fed7d7; border-radius: 4px;
+      padding: .18rem .42rem; margin-top: .22rem;
+      text-decoration: none; white-space: nowrap;
+    }
+    .yt-btn:hover { background: #fed7d7; }
+
+    @media (max-width: 400px) {
+      .mname { display: none; }
+      .sc-val { font-size: 1rem; }
+      .match-row { padding: .5rem .75rem; }
+    }
+
     /* ── CHECKED STATE ──────────────────────── */
     .s { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .s.done {
@@ -426,30 +521,39 @@
 </div>
 
 <main>
-  <div class="summary" id="summary">
-    <div class="summary-hdr" id="sum-toggle">
-      <h3>📋 Moja ponudba za zamenjavo (vse reprezentance)</h3>
-      <span class="toggle-ico">▼</span>
-    </div>
-    <div class="summary-body">
-      <div class="sum-cols">
-        <div class="sum-col need">
-          <h4>🔴 Potrebujem te sličice</h4>
-          <div class="sum-stickers" id="all-need"></div>
-        </div>
-        <div class="sum-col have">
-          <h4>🟢 Ponujam za zamenjavo</h4>
-          <div class="sum-stickers" id="all-have"></div>
+  <div class="tab-row">
+    <button class="tabbt active" data-t="slicice">⚽ Sličice</button>
+    <button class="tabbt" data-t="rezultati">📊 Rezultati</button>
+  </div>
+
+  <div id="p-slicice">
+    <div class="summary" id="summary">
+      <div class="summary-hdr" id="sum-toggle">
+        <h3>📋 Moja ponudba za zamenjavo (vse reprezentance)</h3>
+        <span class="toggle-ico">▼</span>
+      </div>
+      <div class="summary-body">
+        <div class="sum-cols">
+          <div class="sum-col need">
+            <h4>🔴 Potrebujem te sličice</h4>
+            <div class="sum-stickers" id="all-need"></div>
+          </div>
+          <div class="sum-col have">
+            <h4>🟢 Ponujam za zamenjavo</h4>
+            <div class="sum-stickers" id="all-have"></div>
+          </div>
         </div>
       </div>
     </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty">
+      <div class="empty-ico">🔍</div>
+      <p>Ni rezultatov za "<strong id="eq"></strong>"</p>
+    </div>
   </div>
 
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty">
-    <div class="empty-ico">🔍</div>
-    <p>Ni rezultatov za "<strong id="eq"></strong>"</p>
-  </div>
+  <div id="p-rezultati" hidden></div>
 </main>
 
 <footer>FIFA 2026 · Panini · Zamenjava Sličic</footer>
@@ -697,6 +801,185 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   document.querySelectorAll('.s.done').forEach(el => el.classList.remove('done'));
   data.forEach(t => refreshBadge(t.id));
   saveChecked();
+});
+
+// ── Results tab ────────────────────────────────────────────────────────────
+const EXTRA_T = { CUW: { name: 'Curaçao', flag: '🇨🇼' } };
+function tinfo(id) { return data.find(d => d.id === id) || EXTRA_T[id] || { name: id, flag: '🏳️' }; }
+function yturl(h, a) {
+  return 'https://www.youtube.com/results?search_query='
+    + encodeURIComponent('FIFA World Cup 2026 ' + tinfo(h).name + ' vs ' + tinfo(a).name + ' highlights');
+}
+
+const TODAY_ISO = new Date().toISOString().slice(0,10);
+
+const MATCH_GROUPS = [
+  { id:'A', matches:[
+    { date:'2026-06-11', h:'MEX', a:'RSA', hs:2, as:0 },
+    { date:'2026-06-11', h:'KOR', a:'CZE', hs:2, as:1 },
+    { date:'2026-06-18', h:'CZE', a:'RSA' },
+    { date:'2026-06-18', h:'MEX', a:'KOR' },
+    { date:'2026-06-24', h:'MEX', a:'CZE' },
+    { date:'2026-06-24', h:'RSA', a:'KOR' },
+  ]},
+  { id:'B', matches:[
+    { date:'2026-06-12', h:'CAN', a:'BIH', hs:1, as:1 },
+    { date:'2026-06-13', h:'QAT', a:'SUI', hs:1, as:1 },
+    { date:'2026-06-18', h:'SUI', a:'BIH' },
+    { date:'2026-06-18', h:'CAN', a:'QAT' },
+    { date:'2026-06-24', h:'CAN', a:'SUI' },
+    { date:'2026-06-24', h:'BIH', a:'QAT' },
+  ]},
+  { id:'C', matches:[
+    { date:'2026-06-13', h:'BRA', a:'MAR', hs:1, as:1 },
+    { date:'2026-06-13', h:'SCO', a:'HAI', hs:1, as:0 },
+    { date:'2026-06-20', h:'MAR', a:'SCO' },
+    { date:'2026-06-20', h:'HAI', a:'BRA' },
+    { date:'2026-06-24', h:'BRA', a:'SCO' },
+    { date:'2026-06-24', h:'MAR', a:'HAI' },
+  ]},
+  { id:'D', matches:[
+    { date:'2026-06-12', h:'USA', a:'PAR', hs:4, as:1 },
+    { date:'2026-06-13', h:'AUS', a:'TUR', hs:2, as:0 },
+    { date:'2026-06-20', h:'PAR', a:'TUR' },
+    { date:'2026-06-21', h:'USA', a:'AUS' },
+    { date:'2026-06-25', h:'USA', a:'TUR' },
+    { date:'2026-06-25', h:'PAR', a:'AUS' },
+  ]},
+  { id:'E', matches:[
+    { date:'2026-06-14', h:'GER', a:'CUW' },
+    { date:'2026-06-14', h:'CIV', a:'ECU' },
+    { date:'2026-06-21', h:'CUW', a:'CIV' },
+    { date:'2026-06-21', h:'ECU', a:'GER' },
+    { date:'2026-06-25', h:'GER', a:'CIV' },
+    { date:'2026-06-25', h:'CUW', a:'ECU' },
+  ]},
+  { id:'F', matches:[
+    { date:'2026-06-14', h:'NED', a:'JPN' },
+    { date:'2026-06-14', h:'SWE', a:'TUN' },
+    { date:'2026-06-21', h:'JPN', a:'SWE' },
+    { date:'2026-06-22', h:'TUN', a:'NED' },
+    { date:'2026-06-25', h:'NED', a:'SWE' },
+    { date:'2026-06-25', h:'JPN', a:'TUN' },
+  ]},
+  { id:'G', matches:[
+    { date:'2026-06-15', h:'BEL', a:'EGY' },
+    { date:'2026-06-15', h:'IRN', a:'NZL' },
+    { date:'2026-06-22', h:'EGY', a:'IRN' },
+    { date:'2026-06-22', h:'NZL', a:'BEL' },
+    { date:'2026-06-26', h:'BEL', a:'IRN' },
+    { date:'2026-06-26', h:'EGY', a:'NZL' },
+  ]},
+  { id:'H', matches:[
+    { date:'2026-06-15', h:'ESP', a:'CPV' },
+    { date:'2026-06-15', h:'KSA', a:'URU' },
+    { date:'2026-06-22', h:'CPV', a:'KSA' },
+    { date:'2026-06-22', h:'URU', a:'ESP' },
+    { date:'2026-06-26', h:'ESP', a:'KSA' },
+    { date:'2026-06-26', h:'CPV', a:'URU' },
+  ]},
+  { id:'I', matches:[
+    { date:'2026-06-16', h:'FRA', a:'SEN' },
+    { date:'2026-06-16', h:'IRQ', a:'NOR' },
+    { date:'2026-06-23', h:'SEN', a:'IRQ' },
+    { date:'2026-06-23', h:'NOR', a:'FRA' },
+    { date:'2026-06-26', h:'FRA', a:'IRQ' },
+    { date:'2026-06-26', h:'SEN', a:'NOR' },
+  ]},
+  { id:'J', matches:[
+    { date:'2026-06-16', h:'ARG', a:'ALG' },
+    { date:'2026-06-16', h:'AUT', a:'JOR' },
+    { date:'2026-06-23', h:'ALG', a:'AUT' },
+    { date:'2026-06-23', h:'JOR', a:'ARG' },
+    { date:'2026-06-26', h:'ARG', a:'AUT' },
+    { date:'2026-06-26', h:'ALG', a:'JOR' },
+  ]},
+  { id:'K', matches:[
+    { date:'2026-06-17', h:'POR', a:'COD' },
+    { date:'2026-06-17', h:'UZB', a:'COL' },
+    { date:'2026-06-24', h:'COD', a:'UZB' },
+    { date:'2026-06-24', h:'COL', a:'POR' },
+    { date:'2026-06-27', h:'POR', a:'UZB' },
+    { date:'2026-06-27', h:'COD', a:'COL' },
+  ]},
+  { id:'L', matches:[
+    { date:'2026-06-17', h:'ENG', a:'CRO' },
+    { date:'2026-06-17', h:'GHA', a:'PAN' },
+    { date:'2026-06-24', h:'CRO', a:'GHA' },
+    { date:'2026-06-24', h:'PAN', a:'ENG' },
+    { date:'2026-06-27', h:'ENG', a:'GHA' },
+    { date:'2026-06-27', h:'CRO', a:'PAN' },
+  ]},
+];
+
+function fmtDate(iso) {
+  const [, , dd] = iso.split('-');
+  const months = ['jan','feb','mar','apr','maj','jun','jul','avg','sep','okt','nov','dec'];
+  const m = parseInt(iso.split('-')[1]) - 1;
+  return `${parseInt(dd)}. ${months[m]}`;
+}
+
+function renderResults() {
+  const panel = document.getElementById('p-rezultati');
+  panel.innerHTML = '';
+  MATCH_GROUPS.forEach(g => {
+    const teams = [...new Set(g.matches.flatMap(m => [m.h, m.a]))];
+    const flags = teams.map(id => tinfo(id).flag).join('  ');
+    const names = teams.map(id => tinfo(id).name).join(' · ');
+
+    let rowsHtml = '';
+    g.matches.forEach(m => {
+      const ht = tinfo(m.h), at = tinfo(m.a);
+      const played = m.hs !== undefined;
+      const today  = m.date === TODAY_ISO;
+
+      let mid;
+      if (played) {
+        mid = `<div class="sc-block">
+          <div class="sc-val">${m.hs}&nbsp;:&nbsp;${m.as}</div>
+          <a class="yt-btn" href="${yturl(m.h, m.a)}" target="_blank" rel="noopener">▶ Highlights</a>
+        </div>`;
+      } else if (today) {
+        mid = `<div class="sc-block"><span class="sc-today">⚡ Danes</span></div>`;
+      } else {
+        mid = `<div class="sc-block"><div class="sc-date">${fmtDate(m.date)}</div></div>`;
+      }
+
+      rowsHtml += `<div class="match-row${played?' played':today?' today-m':''}">
+        <div class="mt"><span class="mflag">${ht.flag}</span><span class="mname">${ht.name}</span></div>
+        ${mid}
+        <div class="mt away"><span class="mname">${at.name}</span><span class="mflag">${at.flag}</span></div>
+      </div>`;
+    });
+
+    const card = document.createElement('div');
+    card.className = 'grp-card open';
+    card.innerHTML = `
+      <div class="grp-hdr">
+        <div class="grp-letter">${g.id}</div>
+        <div class="grp-teams">${flags}<br><small style="opacity:.7;font-size:.7rem">${names}</small></div>
+        <span class="grp-tog">▼</span>
+      </div>
+      <div class="grp-body">${rowsHtml}</div>`;
+    card.querySelector('.grp-hdr').addEventListener('click', () => card.classList.toggle('open'));
+    panel.appendChild(card);
+  });
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+const ctrlWrap = document.querySelector('.ctrl-wrap');
+let resultsBuilt = false;
+
+document.querySelectorAll('.tabbt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabbt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const t = btn.dataset.t;
+    document.getElementById('p-slicice').hidden = t !== 'slicice';
+    document.getElementById('p-rezultati').hidden = t !== 'rezultati';
+    ctrlWrap.hidden = t !== 'slicice';
+    if (t === 'rezultati' && !resultsBuilt) { renderResults(); resultsBuilt = true; }
+  });
 });
 </script>
 </body>
