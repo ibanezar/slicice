@@ -425,6 +425,39 @@
       border-top: 1px solid var(--border);
     }
 
+    /* ── ADD DUPE FORM ──────────────────────── */
+    .add-row { margin-top: .45rem; display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+    .add-dupe-btn {
+      font-size: .7rem; font-weight: 700;
+      padding: .2rem .55rem;
+      border: 1.5px dashed var(--green); border-radius: 5px;
+      color: var(--green); background: transparent; cursor: pointer;
+      transition: background .15s;
+    }
+    .add-dupe-btn:hover { background: #f0fff4; }
+    .add-form { display: flex; align-items: center; gap: .3rem; }
+    .add-inp {
+      width: 4rem; padding: .25rem .4rem;
+      border: 1.5px solid var(--border); border-radius: 5px;
+      font-size: 16px; outline: none;
+    }
+    .add-inp:focus { border-color: var(--green); }
+    .add-ok, .add-cancel {
+      font-size: .75rem; font-weight: 700;
+      padding: .22rem .45rem; border-radius: 5px; cursor: pointer; border: 1.5px solid;
+    }
+    .add-ok   { background: #f0fff4; color: var(--green); border-color: var(--green); }
+    .add-ok:hover { background: #c6f6d5; }
+    .add-cancel { background: #fff5f5; color: var(--red); border-color: var(--red); }
+    .add-cancel:hover { background: #fed7d7; }
+    .s.added { border-style: dashed; padding-right: 1.3rem; position: relative; }
+    .rm-btn {
+      position: absolute; right: .18rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: .72rem; color: currentColor; opacity: .55; padding: 0; line-height: 1;
+    }
+    .rm-btn:hover { opacity: 1; }
+
     /* ── MOBILE ─────────────────────────────── */
 
     /* iOS auto-zoom fix: any input < 16px triggers zoom on focus */
@@ -629,6 +662,18 @@ const data = TEAMS.map(t => {
   return { ...t, needed, dupes, dupCnt, totalDupes: dupArr.length };
 });
 
+// ── User-added duplicates (persisted) ────────────────────────────────────
+const ADDED_STORE = 'slicice_added_v1';
+let addedDupes = JSON.parse(localStorage.getItem(ADDED_STORE) || '{}');
+function saveAddedDupes() { localStorage.setItem(ADDED_STORE, JSON.stringify(addedDupes)); }
+
+function mergedDupeCnt(tid) {
+  const t = data.find(d => d.id === tid);
+  const cnt = { ...t.dupCnt };
+  (addedDupes[tid] || []).forEach(n => { cnt[String(n)] = (cnt[String(n)] || 0) + 1; });
+  return cnt;
+}
+
 // ── Stats ──────────────────────────────────────────────────────────────────
 const totNeed  = data.reduce((s, d) => s + d.needed.length, 0);
 const totDupes = data.reduce((s, d) => s + d.totalDupes, 0);
@@ -667,10 +712,16 @@ data.forEach(t => {
     ? t.needed.map(n => `<span class="s need" data-n="${n}" data-key="need:${t.id}:${n}">${n}</span>`).join('')
     : '<span class="none-txt">Vse sličice so zbrane ✓</span>';
 
-  const haveHtml = t.dupes.length
-    ? t.dupes.map(n => {
-        const c = t.dupCnt[n];
-        return `<span class="s have${c > 1 ? ' multi' : ''}" data-n="${n}" data-key="have:${t.id}:${n}">${n}${c > 1 ? `<small>×${c}</small>` : ''}</span>`;
+  const combined = mergedDupeCnt(t.id);
+  const sortedD  = Object.keys(combined).sort((a, b) => +a - +b);
+  const addedSet = new Set((addedDupes[t.id] || []).map(String));
+  const totalD   = Object.values(combined).reduce((s, c) => s + c, 0);
+
+  const haveHtml = sortedD.length
+    ? sortedD.map(n => {
+        const c = combined[n], isAdded = addedSet.has(n);
+        const rmBtn = isAdded ? `<button class="rm-btn" data-team="${t.id}" data-num="${n}">×</button>` : '';
+        return `<span class="s have${c > 1 ? ' multi' : ''}${isAdded ? ' added' : ''}" data-n="${n}" data-key="have:${t.id}:${n}">${n}${c > 1 ? `<small>×${c}</small>` : ''}${rmBtn}</span>`;
       }).join('')
     : '<span class="none-txt">Ni dvojnikov</span>';
 
@@ -681,15 +732,23 @@ data.forEach(t => {
         <span class="tname">${t.name}</span>
         <div class="badges">
           ${t.needed.length ? `<span class="badge need">-${t.needed.length}</span>` : ''}
-          ${t.dupes.length  ? `<span class="badge have">+${t.totalDupes}</span>` : ''}
+          ${totalD          ? `<span class="badge have">+${totalD}</span>`          : ''}
         </div>
       </div>
       <div class="card-body">
         <div class="slabel need">🔴 Manjka (${t.needed.length})</div>
         <div class="stickers">${needHtml}</div>
         <div class="div"></div>
-        <div class="slabel have">🟢 Dvojniki (${t.totalDupes})</div>
-        <div class="stickers">${haveHtml}</div>
+        <div class="slabel have" id="dl-${t.id}">🟢 Dvojniki (${totalD})</div>
+        <div class="stickers" id="dw-${t.id}">${haveHtml}</div>
+        <div class="add-row">
+          <button class="add-dupe-btn" data-team="${t.id}">＋ Dodaj duplikat</button>
+          <div class="add-form" id="af-${t.id}" hidden>
+            <input class="add-inp" type="number" min="0" max="99" placeholder="Št.">
+            <button class="add-ok"     data-team="${t.id}">✓</button>
+            <button class="add-cancel" data-team="${t.id}">✕</button>
+          </div>
+        </div>
       </div>
     </div>`);
 });
@@ -765,7 +824,8 @@ function refreshBadge(teamId) {
   const nb = card.querySelector('.badge.need');
   const hb = card.querySelector('.badge.have');
   const rem  = t.needed.filter(n => !checked.has(`need:${t.id}:${n}`)).length;
-  const remD = t.dupes.reduce((s, n) => checked.has(`have:${t.id}:${n}`) ? s : s + t.dupCnt[n], 0);
+  const cnt  = mergedDupeCnt(teamId);
+  const remD = Object.entries(cnt).reduce((s, [n, c]) => checked.has(`have:${teamId}:${n}`) ? s : s + c, 0);
   if (nb) nb.textContent = `-${rem}`;
   if (hb) hb.textContent = `+${remD}`;
 }
@@ -779,6 +839,7 @@ document.getElementById('btn-reset').style.display = checked.size ? '' : 'none';
 
 // Click to toggle
 document.addEventListener('click', e => {
+  if (e.target.closest('.rm-btn, .add-dupe-btn, .add-ok, .add-cancel, .add-inp')) return;
   const el = e.target.closest('.s[data-key]');
   if (!el) return;
   const key = el.dataset.key;
@@ -801,6 +862,84 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   document.querySelectorAll('.s.done').forEach(el => el.classList.remove('done'));
   data.forEach(t => refreshBadge(t.id));
   saveChecked();
+});
+
+// ── Add / remove duplicates ────────────────────────────────────────────────
+function buildDupesHtml(tid) {
+  const cnt = mergedDupeCnt(tid);
+  const sorted = Object.keys(cnt).sort((a, b) => +a - +b);
+  const addedSet = new Set((addedDupes[tid] || []).map(String));
+  if (!sorted.length) return '<span class="none-txt">Ni dvojnikov</span>';
+  return sorted.map(n => {
+    const c = cnt[n], isAdded = addedSet.has(n), key = `have:${tid}:${n}`;
+    const rmBtn = isAdded ? `<button class="rm-btn" data-team="${tid}" data-num="${n}">×</button>` : '';
+    return `<span class="s have${c > 1 ? ' multi' : ''}${checked.has(key) ? ' done' : ''}${isAdded ? ' added' : ''}" data-n="${n}" data-key="${key}">${n}${c > 1 ? `<small>×${c}</small>` : ''}${rmBtn}</span>`;
+  }).join('');
+}
+
+function refreshDupesSection(tid) {
+  const cnt   = mergedDupeCnt(tid);
+  const total = Object.values(cnt).reduce((s, c) => s + c, 0);
+  document.getElementById('dw-' + tid).innerHTML = buildDupesHtml(tid);
+  document.getElementById('dl-' + tid).textContent = `🟢 Dvojniki (${total})`;
+  const card = document.getElementById('c-' + tid);
+  let hb = card.querySelector('.badge.have');
+  if (total > 0) {
+    if (hb) hb.textContent = `+${total}`;
+    else card.querySelector('.badges').insertAdjacentHTML('beforeend', `<span class="badge have">+${total}</span>`);
+  } else if (hb) { hb.textContent = '+0'; }
+}
+
+document.getElementById('grid').addEventListener('click', e => {
+  // Show add form
+  if (e.target.classList.contains('add-dupe-btn')) {
+    const tid = e.target.dataset.team;
+    e.target.hidden = true;
+    const form = document.getElementById('af-' + tid);
+    form.hidden = false;
+    form.querySelector('.add-inp').focus();
+    return;
+  }
+  // Cancel
+  if (e.target.classList.contains('add-cancel')) {
+    const tid = e.target.dataset.team;
+    document.getElementById('af-' + tid).hidden = true;
+    document.querySelector(`#c-${tid} .add-dupe-btn`).hidden = false;
+    return;
+  }
+  // Confirm add
+  if (e.target.classList.contains('add-ok')) {
+    const tid = e.target.dataset.team;
+    const inp = document.querySelector(`#af-${tid} .add-inp`);
+    const num = inp.value.trim();
+    if (!num) { inp.focus(); return; }
+    if (!addedDupes[tid]) addedDupes[tid] = [];
+    addedDupes[tid].push(num);
+    saveAddedDupes();
+    refreshDupesSection(tid);
+    inp.value = '';
+    document.getElementById('af-' + tid).hidden = true;
+    document.querySelector(`#c-${tid} .add-dupe-btn`).hidden = false;
+    return;
+  }
+  // Remove user-added dupe
+  if (e.target.classList.contains('rm-btn')) {
+    const { team: tid, num } = e.target.dataset;
+    const arr = addedDupes[tid] || [];
+    const idx = arr.indexOf(num);
+    if (idx !== -1) arr.splice(idx, 1);
+    if (!arr.length) delete addedDupes[tid];
+    else addedDupes[tid] = arr;
+    saveAddedDupes();
+    refreshDupesSection(tid);
+  }
+});
+
+document.getElementById('grid').addEventListener('keydown', e => {
+  if (!e.target.classList.contains('add-inp')) return;
+  const form = e.target.closest('.add-form');
+  if (e.key === 'Enter')  form.querySelector('.add-ok').click();
+  if (e.key === 'Escape') form.querySelector('.add-cancel').click();
 });
 
 // ── Results tab ────────────────────────────────────────────────────────────
