@@ -124,6 +124,12 @@
     .fbtn:hover { border-color: var(--navy); color: var(--navy); }
     .fbtn.on { background: var(--navy); color: var(--white); border-color: var(--navy); }
     #count { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+    #live {
+      font-size: .78rem; font-weight: 700; white-space: nowrap;
+      display: flex; gap: .55rem; flex-shrink: 0;
+    }
+    #live .lv-need { color: var(--red); }
+    #live .lv-have { color: var(--green); }
 
     /* ── MAIN ───────────────────────────────── */
     main {
@@ -548,6 +554,7 @@
       <button class="fbtn" data-f="have">Dvojniki</button>
       <button class="fbtn" data-f="both">Potrebujem + Imam</button>
     </div>
+    <span id="live"></span>
     <span id="count"></span>
     <button id="btn-reset" title="Počisti vse označene">✕ Počisti</button>
   </div>
@@ -691,6 +698,8 @@ function updateStats() {
   document.getElementById('s-needed').textContent = need;
   document.getElementById('s-dupes').textContent  = dupes;
   document.getElementById('s-uniq').textContent   = uniq;
+  document.getElementById('live').innerHTML =
+    `<span class="lv-need">🔴 ${need}</span><span class="lv-have">🟢 ${dupes}</span>`;
 }
 
 // ── Swap summary ───────────────────────────────────────────────────────────
