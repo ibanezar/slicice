@@ -675,14 +675,23 @@ function mergedDupeCnt(tid) {
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────
-const totNeed  = data.reduce((s, d) => s + d.needed.length, 0);
-const totDupes = data.reduce((s, d) => s + d.totalDupes, 0);
-const totUniq  = data.reduce((s, d) => s + d.dupes.length, 0);
+// Number of teams is fixed; the rest recalculate as stickers get ticked off
+// or duplicates are added/removed (see updateStats below).
+document.getElementById('s-teams').textContent = data.length;
 
-document.getElementById('s-teams').textContent  = data.length;
-document.getElementById('s-needed').textContent = totNeed;
-document.getElementById('s-dupes').textContent  = totDupes;
-document.getElementById('s-uniq').textContent   = totUniq;
+function updateStats() {
+  let need = 0, dupes = 0, uniq = 0;
+  data.forEach(t => {
+    need += t.needed.filter(n => !checked.has(`need:${t.id}:${n}`)).length;
+    const cnt = mergedDupeCnt(t.id);
+    Object.entries(cnt).forEach(([n, c]) => {
+      if (!checked.has(`have:${t.id}:${n}`)) { dupes += c; uniq += 1; }
+    });
+  });
+  document.getElementById('s-needed').textContent = need;
+  document.getElementById('s-dupes').textContent  = dupes;
+  document.getElementById('s-uniq').textContent   = uniq;
+}
 
 // ── Swap summary ───────────────────────────────────────────────────────────
 const needEl = document.getElementById('all-need');
@@ -835,6 +844,7 @@ document.querySelectorAll('.s[data-key]').forEach(el => {
   if (checked.has(el.dataset.key)) el.classList.add('done');
 });
 data.forEach(t => refreshBadge(t.id));
+updateStats();
 document.getElementById('btn-reset').style.display = checked.size ? '' : 'none';
 
 // Click to toggle
@@ -853,6 +863,7 @@ document.addEventListener('click', e => {
   }
   const teamId = key.split(':')[1];
   refreshBadge(teamId);
+  updateStats();
   saveChecked();
 });
 
@@ -861,6 +872,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   checked.clear();
   document.querySelectorAll('.s.done').forEach(el => el.classList.remove('done'));
   data.forEach(t => refreshBadge(t.id));
+  updateStats();
   saveChecked();
 });
 
@@ -888,6 +900,7 @@ function refreshDupesSection(tid) {
     if (hb) hb.textContent = `+${total}`;
     else card.querySelector('.badges').insertAdjacentHTML('beforeend', `<span class="badge have">+${total}</span>`);
   } else if (hb) { hb.textContent = '+0'; }
+  updateStats();
 }
 
 document.getElementById('grid').addEventListener('click', e => {
